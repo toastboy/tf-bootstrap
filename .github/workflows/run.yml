@@ -1,0 +1,33 @@
+name: Terraform
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan
+        env:
+          TF_VAR_op_connect_host: ${{ secrets.OP_CONNECT_HOST }}
+          TF_VAR_op_connect_token: ${{ secrets.OP_CONNECT_TOKEN }}
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_op_connect_host: ${{ secrets.OP_CONNECT_HOST }}
+          TF_VAR_op_connect_token: ${{ secrets.OP_CONNECT_TOKEN }}
