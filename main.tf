@@ -25,7 +25,7 @@ provider "cloudflare" {
 }
 
 resource "cloudflare_zero_trust_access_service_token" "onepassword_connect" {
-  account_id = data.hcp_vault_secrets_app.cloudflare.secrets.accountid
+  account_id = var.bootstrap_cloudflare_account_id
   name       = "1Password Connect"
   duration   = "12h"
 }
