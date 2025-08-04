@@ -32,7 +32,7 @@ resource "cloudflare_zero_trust_access_service_token" "onepassword_connect" {
 
 resource "cloudflare_zero_trust_access_policy" "onepassword_connect_service" {
   account_id = var.bootstrap_cloudflare_account_id
-  name       = "1Password Connect Service Token Access"
+  name       = "1Password Connect Service Token: Bootstrap"
   decision   = "non_identity"
 
   include = [
