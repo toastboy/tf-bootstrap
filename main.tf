@@ -24,6 +24,31 @@ provider "cloudflare" {
   api_token = var.bootstrap_cloudflare_api_token
 }
 
+resource "cloudflare_zero_trust_tunnel_cloudflared" "tunnel" {
+  account_id = var.bootstrap_cloudflare_account_id
+  name       = "bootstrap.toastboy.co.uk"
+}
+
+resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
+  account_id = var.bootstrap_cloudflare_account_id
+  tunnel_id  = cloudflare_zero_trust_tunnel_cloudflared.tunnel.id
+
+  config = {
+    ingress = [
+      {
+        hostname = "onepassword-connect.toastboy.co.uk"
+        service  = "http://172.16.16.100:8080"
+      },
+      {
+        service = "http_status:404"
+      }
+    ],
+    warp_routing = {
+      enabled = false
+    }
+  }
+}
+
 resource "cloudflare_zero_trust_access_service_token" "onepassword_connect" {
   account_id = var.bootstrap_cloudflare_account_id
   name       = "1Password Connect"
@@ -50,6 +75,15 @@ data "cloudflare_zones" "toastboy_co_uk" {
   }
 
   name = "toastboy.co.uk"
+}
+
+resource "cloudflare_dns_record" "record" {
+  zone_id = data.cloudflare_zones.toastboy_co_uk.result[0].id
+  name    = "onepassword-connect.toastboy.co.uk"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.tunnel.id}.cfargotunnel.com"
+  type    = "CNAME"
+  proxied = true
+  ttl     = 1
 }
 
 resource "cloudflare_zero_trust_access_application" "service_application" {
