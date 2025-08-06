@@ -8,6 +8,17 @@ variable "bootstrap_cloudflare_api_token" {
   type        = string
 }
 
+variable "bootstrap_cloudflare_connect_token" {
+  description = "The Cloudflare Connect token"
+  type        = string
+}
+
+variable "subdomain" {
+  description = "The subdomain for the 1Password Connect service"
+  type        = string
+  default     = "onepassword-connect"
+}
+
 variable "domain" {
   description = "The domain for the Cloudflare zone"
   type        = string

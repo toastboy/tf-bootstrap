@@ -24,9 +24,14 @@ provider "cloudflare" {
   api_token = var.bootstrap_cloudflare_api_token
 }
 
+provider "onepassword" {
+  url   = format("https://%s.%s", var.subdomain, var.domain)
+  token = var.bootstrap_cloudflare_connect_token
+}
+
 resource "cloudflare_zero_trust_tunnel_cloudflared" "tunnel" {
   account_id = var.bootstrap_cloudflare_account_id
-  name       = "bootstrap.toastboy.co.uk"
+  name       = format("bootstrap.%s", var.domain)
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
@@ -36,7 +41,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
   config = {
     ingress = [
       {
-        hostname = "onepassword-connect.toastboy.co.uk"
+        hostname = format("%s.%s", var.subdomain, var.domain)
         service  = format("http://%s:%d", var.cloudflare_connect_host, var.cloudflare_connect_port)
       },
       {
@@ -79,7 +84,7 @@ data "cloudflare_zones" "toastboy_co_uk" {
 
 resource "cloudflare_dns_record" "record" {
   zone_id = data.cloudflare_zones.toastboy_co_uk.result[0].id
-  name    = "onepassword-connect.toastboy.co.uk"
+  name    = format("%s.%s", var.subdomain, var.domain)
   content = "${cloudflare_zero_trust_tunnel_cloudflared.tunnel.id}.cfargotunnel.com"
   type    = "CNAME"
   proxied = true
@@ -89,7 +94,7 @@ resource "cloudflare_dns_record" "record" {
 resource "cloudflare_zero_trust_access_application" "service_application" {
   zone_id = data.cloudflare_zones.toastboy_co_uk.result[0].id
 
-  name   = "onepassword-connect"
+  name   = var.subdomain
   domain = var.domain
 
   type             = "self_hosted"
@@ -99,4 +104,20 @@ resource "cloudflare_zero_trust_access_application" "service_application" {
     id         = cloudflare_zero_trust_access_policy.onepassword_connect_service.id
     precedence = 1
   }]
+}
+
+data "onepassword_vault" "example" {
+  name = "op-connect"
+}
+
+resource "onepassword_item" "demo_password" {
+  vault = data.onepassword_vault.example.id
+
+  title    = "Demo Password Recipe"
+  category = "password"
+
+  password_recipe {
+    length  = 40
+    symbols = false
+  }
 }
