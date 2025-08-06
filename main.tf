@@ -106,12 +106,8 @@ resource "cloudflare_zero_trust_access_application" "service_application" {
   }]
 }
 
-data "onepassword_vault" "example" {
-  name = "op-connect"
-}
-
 resource "onepassword_item" "demo_password" {
-  vault = data.onepassword_vault.example.id
+  vault = "op-connect"
 
   title    = "Demo Password Recipe"
   category = "password"
