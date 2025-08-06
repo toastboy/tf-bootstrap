@@ -37,7 +37,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
     ingress = [
       {
         hostname = "onepassword-connect.toastboy.co.uk"
-        service  = "http://172.16.16.100:8080"
+        service  = format("http://%s:%d", var.cloudflare_connect_host, var.cloudflare_connect_port)
       },
       {
         service = "http_status:404"
@@ -74,7 +74,7 @@ data "cloudflare_zones" "toastboy_co_uk" {
     id = var.bootstrap_cloudflare_account_id
   }
 
-  name = "toastboy.co.uk"
+  name = var.domain
 }
 
 resource "cloudflare_dns_record" "record" {
@@ -90,7 +90,7 @@ resource "cloudflare_zero_trust_access_application" "service_application" {
   zone_id = data.cloudflare_zones.toastboy_co_uk.result[0].id
 
   name   = "onepassword-connect"
-  domain = "toastboy.co.uk"
+  domain = var.domain
 
   type             = "self_hosted"
   session_duration = "1h"
