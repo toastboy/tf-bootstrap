@@ -141,7 +141,11 @@ data "onepassword_vault" "op_connect" {
 }
 
 resource "onepassword_item" "demo_password" {
-  vault = data.onepassword_vault.op_connect.id
+  # The documentation says that this should be the vault ID instead of name but
+  # with the current version it works with the name.
+
+  # Let's try using the portion of the vault ID after the last slash.
+  vault = regex("[^/]+$", data.onepassword_vault.op_connect.id)
 
   title    = "Demo Password Recipe"
   category = "password"
