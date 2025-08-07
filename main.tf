@@ -8,6 +8,11 @@ terraform {
   }
 
   required_providers {
+    tfe = {
+      source  = "hashicorp/tfe"
+      version = "0.68.2"
+    }
+
     cloudflare = {
       source  = "cloudflare/cloudflare"
       version = "~> 5.6.0"
@@ -18,6 +23,10 @@ terraform {
       version = "~> 2.1.0"
     }
   }
+}
+
+provider "tfe" {
+  token = var.bootstrap_tfe_token
 }
 
 provider "cloudflare" {
@@ -57,7 +66,28 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "tunnel_config" {
 resource "cloudflare_zero_trust_access_service_token" "onepassword_connect" {
   account_id = var.bootstrap_cloudflare_account_id
   name       = "1Password Connect"
-  duration   = "12h"
+  duration   = "24h"
+}
+
+data "tfe_workspace" "tf-bootstrap" {
+  name         = "tf-bootstrap"
+  organization = "toastboy"
+}
+
+resource "tfe_variable" "test_cloudflare_zero_trust_access_service_token_client_id" {
+  key          = "test_cloudflare_zero_trust_access_service_token_client_id"
+  value_wo     = cloudflare_zero_trust_access_service_token.onepassword_connect.client_id
+  category     = "terraform"
+  workspace_id = data.tfe_workspace.tf-bootstrap.id
+  description  = "See https://registry.terraform.io/providers/cloudflare/cloudflare/5.4.0/docs/resources/zero_trust_access_service_token"
+}
+
+resource "tfe_variable" "test_cloudflare_zero_trust_access_service_token_client_secret" {
+  key          = "test_cloudflare_zero_trust_access_service_token_client_secret"
+  value_wo     = cloudflare_zero_trust_access_service_token.onepassword_connect.client_secret
+  category     = "terraform"
+  workspace_id = data.tfe_workspace.tf-bootstrap.id
+  description  = "See https://registry.terraform.io/providers/cloudflare/cloudflare/5.4.0/docs/resources/zero_trust_access_service_token"
 }
 
 resource "cloudflare_zero_trust_access_policy" "onepassword_connect_service" {
@@ -98,7 +128,7 @@ resource "cloudflare_zero_trust_access_application" "service_application" {
   domain = var.domain
 
   type             = "self_hosted"
-  session_duration = "1h"
+  session_duration = "24h"
 
   policies = [{
     id         = cloudflare_zero_trust_access_policy.onepassword_connect_service.id
