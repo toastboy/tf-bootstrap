@@ -141,7 +141,7 @@ data "onepassword_vault" "op_connect" {
 }
 
 resource "onepassword_item" "demo_password" {
-  vault = data.onepassword_vault.op_connect.name
+  vault = data.onepassword_vault.op_connect.id
 
   title    = "Demo Password Recipe"
   category = "password"
