@@ -35,7 +35,7 @@ provider "cloudflare" {
 
 provider "onepassword" {
   url   = format("https://%s.%s", var.subdomain, var.domain)
-  token = var.bootstrap_cloudflare_connect_token
+  token = var.bootstrap_onepassword_connect_token
 }
 
 resource "cloudflare_zero_trust_tunnel_cloudflared" "tunnel" {
@@ -136,8 +136,12 @@ resource "cloudflare_zero_trust_access_application" "service_application" {
   }]
 }
 
+data "onepassword_vault" "op_connect" {
+  name = "op-connect"
+}
+
 resource "onepassword_item" "demo_password" {
-  vault = "op-connect"
+  vault = data.onepassword_vault.op_connect.name
 
   title    = "Demo Password Recipe"
   category = "password"

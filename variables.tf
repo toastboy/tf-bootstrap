@@ -14,8 +14,8 @@ variable "bootstrap_cloudflare_api_token" {
   type        = string
 }
 
-variable "bootstrap_cloudflare_connect_token" {
-  description = "The Cloudflare Connect token"
+variable "bootstrap_onepassword_connect_token" {
+  description = "The 1Password Connect token"
   type        = string
 }
 
