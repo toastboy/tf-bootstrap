@@ -69,27 +69,6 @@ resource "cloudflare_zero_trust_access_service_token" "onepassword_connect" {
   duration   = "24h"
 }
 
-data "tfe_workspace" "tf-bootstrap" {
-  name         = "tf-bootstrap"
-  organization = "toastboy"
-}
-
-resource "tfe_variable" "test_cloudflare_zero_trust_access_service_token_client_id" {
-  key          = "test_cloudflare_zero_trust_access_service_token_client_id"
-  value_wo     = cloudflare_zero_trust_access_service_token.onepassword_connect.client_id
-  category     = "terraform"
-  workspace_id = data.tfe_workspace.tf-bootstrap.id
-  description  = "See https://registry.terraform.io/providers/cloudflare/cloudflare/5.4.0/docs/resources/zero_trust_access_service_token"
-}
-
-resource "tfe_variable" "test_cloudflare_zero_trust_access_service_token_client_secret" {
-  key          = "test_cloudflare_zero_trust_access_service_token_client_secret"
-  value_wo     = cloudflare_zero_trust_access_service_token.onepassword_connect.client_secret
-  category     = "terraform"
-  workspace_id = data.tfe_workspace.tf-bootstrap.id
-  description  = "See https://registry.terraform.io/providers/cloudflare/cloudflare/5.4.0/docs/resources/zero_trust_access_service_token"
-}
-
 resource "cloudflare_zero_trust_access_policy" "onepassword_connect_service" {
   account_id = var.bootstrap_cloudflare_account_id
   name       = "1Password Connect Service Token: Bootstrap"
@@ -136,22 +115,22 @@ resource "cloudflare_zero_trust_access_application" "service_application" {
   }]
 }
 
-data "onepassword_vault" "op_connect" {
-  name = "op-connect"
+data "onepassword_vault" "tf_bootstrap" {
+  name = "tf-bootstrap"
 }
 
-resource "onepassword_item" "demo_password" {
-  # The documentation says that this should be the vault ID instead of name but
-  # with the current version it works with the name.
-
-  # Let's try using the portion of the vault ID after the last slash.
-  vault = regex("[^/]+$", data.onepassword_vault.op_connect.id)
-
-  title    = "Demo Password Recipe"
+resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_id" {
+  # The documentation isn't clear but what we need here is the portion of the
+  # vault ID after the last slash.
+  vault    = regex("[^/]+$", data.onepassword_vault.tf_bootstrap.id)
+  title    = "Cloudflare Zero Trust Access Service Token Client ID"
   category = "password"
+  password = cloudflare_zero_trust_access_service_token.onepassword_connect.client_id
+}
 
-  password_recipe {
-    length  = 40
-    symbols = false
-  }
+resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_secret" {
+  vault    = regex("[^/]+$", data.onepassword_vault.tf_bootstrap.id)
+  title    = "Cloudflare Zero Trust Access Service Token Client Secret"
+  category = "password"
+  password = cloudflare_zero_trust_access_service_token.onepassword_connect.client_secret
 }
