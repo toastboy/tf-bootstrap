@@ -157,7 +157,7 @@ resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_s
 
     field {
       label = "Created At"
-      type  = "DATE"
+      type  = "STRING"
       value = timestamp()
     }
 
