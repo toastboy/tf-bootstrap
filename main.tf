@@ -126,6 +126,7 @@ resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_i
   title    = "Cloudflare Zero Trust Access Service Token Client ID"
   category = "password"
   password = cloudflare_zero_trust_access_service_token.onepassword_connect.client_id
+  tags     = ["terraform"]
 }
 
 resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_secret" {
@@ -133,4 +134,5 @@ resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_s
   title    = "Cloudflare Zero Trust Access Service Token Client Secret"
   category = "password"
   password = cloudflare_zero_trust_access_service_token.onepassword_connect.client_secret
+  tags     = ["terraform"]
 }
