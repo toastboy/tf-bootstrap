@@ -127,6 +127,22 @@ resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_i
   category = "password"
   password = cloudflare_zero_trust_access_service_token.onepassword_connect.client_id
   tags     = ["terraform"]
+
+  section {
+    label = "Managed by tf-bootstrap: do not edit manually"
+
+    field {
+      label = "Created At"
+      type  = "DATE"
+      value = timestamp()
+    }
+
+    field {
+      label = "Cloudflare Tunnel ID"
+      type  = "STRING"
+      value = cloudflare_zero_trust_tunnel_cloudflared.tunnel.id
+    }
+  }
 }
 
 resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_secret" {
@@ -135,4 +151,20 @@ resource "onepassword_item" "cloudflare_zero_trust_access_service_token_client_s
   category = "password"
   password = cloudflare_zero_trust_access_service_token.onepassword_connect.client_secret
   tags     = ["terraform"]
+
+  section {
+    label = "Managed by tf-bootstrap: do not edit manually"
+
+    field {
+      label = "Created At"
+      type  = "DATE"
+      value = timestamp()
+    }
+
+    field {
+      label = "Cloudflare Tunnel ID"
+      type  = "STRING"
+      value = cloudflare_zero_trust_tunnel_cloudflared.tunnel.id
+    }
+  }
 }
