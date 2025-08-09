@@ -1,0 +1,73 @@
+name: "Terraform Apply"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  TF_CLOUD_ORGANIZATION: "toastboy"
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
+  TF_WORKSPACE: "tf-bootstrap"
+  CONFIG_DIRECTORY: "./"
+
+  TF_VAR_github_repository: '"${{ github.repository }}"'
+  TF_VAR_github_run_id: '"${{ github.run_id }}"'
+  TF_VAR_github_server_url: '"${{ github.server_url }}"'
+  TF_VAR_github_sha: '"${{ github.sha }}"'
+
+jobs:
+  terraform:
+    name: "Terraform Apply"
+    runs-on: self-hosted
+    permissions:
+      # so GitHub can check out this repo using the default github.token
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load secrets from 1Password and export to environment
+        uses: 1password/load-secrets-action@v2
+        with:
+          export-env: true
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
+          AZURE_TENANT_ID: op://next-www-toastboy/TF_AZURE_TENANT_ID/Section_elpyzkswpwjdt45ytdpuj4zpri/uuid
+          AZURE_SUBSCRIPTION_ID: op://next-www-toastboy/AZURE_SUBSCRIPTION_ID/Section_u2slseexl7iz6qq3ab3kwfut5u/uuid
+          AZURE_CLIENT_ID: op://next-www-toastboy/TF_AZURE_CLIENT_ID/Section_sbgupoixcvisaemyfdnssgod3u/uuid
+          AZURE_CLIENT_SECRET: op://next-www-toastboy/TF_AZURE_CLIENT_SECRET/Section_al3t4lplsritwudt5bbhjxh4e4/uuid
+
+      - name: Upload Configuration
+        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.3.2
+        id: apply-upload
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ${{ env.CONFIG_DIRECTORY }}
+          token: ${{ secrets.TF_API_TOKEN }}
+        env:
+          TF_VAR_azure_tenant_id: '"${{ env.AZURE_TENANT_ID }}"'
+          TF_VAR_azure_subscription_id: '"${{ env.AZURE_SUBSCRIPTION_ID }}"'
+          TF_VAR_azure_client_id: '"${{ env.AZURE_CLIENT_ID }}"'
+          TF_VAR_azure_client_secret: '"${{ env.AZURE_CLIENT_SECRET }}"'
+
+      - name: Create Apply Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.3.2
+        id: apply-run
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+        env:
+          TF_VAR_azure_tenant_id: '"${{ env.AZURE_TENANT_ID }}"'
+          TF_VAR_azure_subscription_id: '"${{ env.AZURE_SUBSCRIPTION_ID }}"'
+          TF_VAR_azure_client_id: '"${{ env.AZURE_CLIENT_ID }}"'
+          TF_VAR_azure_client_secret: '"${{ env.AZURE_CLIENT_SECRET }}"'
+
+      - name: Apply
+        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.3.2
+        if: fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
+        id: apply
+        with:
+          run: ${{ steps.apply-run.outputs.run_id }}
+          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
